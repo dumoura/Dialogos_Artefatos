@@ -1,0 +1,5 @@
+{
+  "name": "Dialogo e artefatos",
+  "description": "An application that simulates a dialogue between a Poet and a Philosopher AI agent on any given topic, complete with text-to-speech for an immersive experience.",
+  "requestFramePermissions": []
+}
