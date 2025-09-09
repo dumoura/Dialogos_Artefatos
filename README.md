@@ -3,6 +3,7 @@
 Bem-vindo ao "Dialogo e Artefatos"! Este não é apenas um gerador de texto, mas um playground experimental e um jogo entre a criatividade humana e a inteligência artificial. Aqui, você não é um espectador passivo, mas um **Leitor Ativo**, um diretor que molda e conduz uma conversa filosófica e poética.
 
 <img width="783" height="456" alt="Captura de Tela 2025-09-09 às 09 04 48" src="https://github.com/user-attachments/assets/5731b847-c23e-4780-be73-a81cab367928" />
+
 Acesse [Dialogo e Artefatos](https://dialogo-e-artefatos-111707575001.us-west1.run.app/)
 
 A premissa é simples: um Poeta e um Filósofo, ambos agentes de IA, dialogam sobre um tema de sua escolha. No entanto, a magia está nos "artefatos" que você pode controlar, transformando cada diálogo em uma peça única.
