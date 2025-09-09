@@ -21,15 +21,29 @@ export const generateDialogueTurn = async (
   history: DialogueEntry[], 
   nextAgent: Agent,
   poetPrompt: string,
-  philosopherPrompt: string
+  philosopherPrompt: string,
+  poetKnowledge?: string,
+  philosopherKnowledge?: string
 ): Promise<string> => {
   try {
     const agentPersona = nextAgent === Agent.Poet ? poetPrompt : philosopherPrompt;
+    const knowledgeBase = nextAgent === Agent.Poet ? poetKnowledge : philosopherKnowledge;
     const historyText = formatHistory(history);
+
+    const knowledgeBaseSection = knowledgeBase 
+      ? `
+**Knowledge Base (You MUST ground your response in this text. Refer to it as your primary source of information and inspiration):**
+---
+${knowledgeBase}
+---
+` 
+      : '';
 
     const fullPrompt = `
 You are an AI agent generating a response for a dialogue between a Poet and a Philosopher.
 The current turn is for the ${nextAgent}.
+
+${knowledgeBaseSection}
 
 **Overall Dialogue Topic:**
 ${topic}
@@ -42,6 +56,7 @@ ${historyText}
 
 Your task is to generate ONLY the ${nextAgent}'s response for this turn.
 Adhere strictly to their persona and instructions.
+If a Knowledge Base is provided, your response must be heavily influenced and informed by its content.
 Do not include any introductory text like "${nextAgent}:" or any meta-analysis.
 The response must be in Brazilian Portuguese.
 

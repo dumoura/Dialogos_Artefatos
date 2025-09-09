@@ -9,3 +9,8 @@ export interface DialogueEntry {
   text: string;
   id: string;
 }
+
+export interface KnowledgeBase {
+  filename: string;
+  content: string;
+}

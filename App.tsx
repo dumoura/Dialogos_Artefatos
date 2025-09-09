@@ -1,11 +1,13 @@
-import React, { useState, useCallback } from 'react';
-import { Agent, DialogueEntry } from './types';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Agent, DialogueEntry, KnowledgeBase } from './types';
 import { generateDialogueTurn, generateSummary } from './services/geminiService';
 import { defaultPoetSystemPrompt, defaultPhilosopherSystemPrompt, defaultOmniscientReaderSystemPrompt } from './constants';
 import TopicInput from './components/TopicInput';
 import DialogueDisplay from './components/DialogueDisplay';
 import SummaryGenerator from './components/SummaryGenerator';
 import CharacterEditor from './components/CharacterEditor';
+import { parseFile } from './utils/fileParser';
+import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 
 const App: React.FC = () => {
   const [dialogue, setDialogue] = useState<DialogueEntry[]>([]);
@@ -19,6 +21,40 @@ const App: React.FC = () => {
   const [poetPrompt, setPoetPrompt] = useState(defaultPoetSystemPrompt);
   const [philosopherPrompt, setPhilosopherPrompt] = useState(defaultPhilosopherSystemPrompt);
   const [summaryPrompt, setSummaryPrompt] = useState(defaultOmniscientReaderSystemPrompt);
+
+  // State for RAG knowledge bases
+  const [poetKnowledgeBase, setPoetKnowledgeBase] = useState<KnowledgeBase | null>(null);
+  const [philosopherKnowledgeBase, setPhilosopherKnowledgeBase] = useState<KnowledgeBase | null>(null);
+
+  useEffect(() => {
+      // Configure the PDF.js worker source once
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.worker.mjs`;
+  }, []);
+
+  const handleFileChange = async (file: File | null, agent: Agent) => {
+    if (!file) {
+      if (agent === Agent.Poet) setPoetKnowledgeBase(null);
+      else setPhilosopherKnowledgeBase(null);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const content = await parseFile(file);
+      const knowledge: KnowledgeBase = { filename: file.name, content };
+      if (agent === Agent.Poet) {
+        setPoetKnowledgeBase(knowledge);
+      } else {
+        setPhilosopherKnowledgeBase(knowledge);
+      }
+    } catch (err) {
+      console.error('File parsing error:', err);
+      setError(err instanceof Error ? err.message : 'Falha ao processar o arquivo.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
 
   const handleStartDialogue = useCallback(async (newTopic: string, turns: number) => {
@@ -35,7 +71,15 @@ const App: React.FC = () => {
       for (let i = 0; i < turns; i++) {
         const nextAgent = i % 2 === 0 ? Agent.Poet : Agent.Philosopher;
         
-        const newText = await generateDialogueTurn(newTopic, currentHistory, nextAgent, poetPrompt, philosopherPrompt);
+        const newText = await generateDialogueTurn(
+          newTopic, 
+          currentHistory, 
+          nextAgent, 
+          poetPrompt, 
+          philosopherPrompt,
+          poetKnowledgeBase?.content,
+          philosopherKnowledgeBase?.content
+        );
         
         const newEntry: DialogueEntry = {
             agent: nextAgent,
@@ -52,7 +96,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [poetPrompt, philosopherPrompt]);
+  }, [poetPrompt, philosopherPrompt, poetKnowledgeBase, philosopherKnowledgeBase]);
 
   const handleGenerateSummary = useCallback(async (turns: number) => {
     if (!topic || dialogue.length === 0) return;
@@ -93,6 +137,9 @@ const App: React.FC = () => {
             setPhilosopherPrompt={setPhilosopherPrompt}
             summaryPrompt={summaryPrompt}
             setSummaryPrompt={setSummaryPrompt}
+            poetKnowledgeBase={poetKnowledgeBase}
+            philosopherKnowledgeBase={philosopherKnowledgeBase}
+            onFileChange={handleFileChange}
             isDisabled={isLoading}
         />
 
